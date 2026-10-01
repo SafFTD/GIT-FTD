@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' 2>/dev/null | grep -qE '/workflows/[^/]+\\.md$|(^|/)AGENTS\\.md$' && python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/sync_adapters.py\" || true"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' 2>/dev/null | grep -qE '(^|/)(pyproject\\.toml|package\\.json|docker-compose\\.yml|justfile)$' && echo 'COMMANDS_DOC_REMINDER: a dev-tooling file changed; check whether COMMANDS.md needs updating (run /commands).' || true"
+          },
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.file_path // empty' 2>/dev/null | grep -qE 'opay-backend/app/core/tenants/.*\\.py$|opay-backend/supabase/migrations/.*\\.sql$' && echo 'TENANT_DEFAULTS_REMINDER: a tenant schema or DB migration changed. If a new feature/table introduces something a tenant should have default values for, ASK the user whether those defaults belong in the tenant schema (app/core/tenants/schema.py) and the creator (app/core/tenants/cli.py).' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
